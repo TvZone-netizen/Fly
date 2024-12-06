@@ -27,21 +27,72 @@ Notification.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 Notification.TextScaled = true
 Notification.TextAlign = Enum.TextXAlignment.Center
 
+local DeleteButton = Instance.new("TextButton")
+DeleteButton.Parent = Frame
+DeleteButton.Size = UDim2.new(0, 200, 0, 50)
+DeleteButton.Position = UDim2.new(0.5, -100, 0, 160)
+DeleteButton.Text = "Delete"
+DeleteButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+DeleteButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+
 local flying = false
 local bodyVelocity
 
 FlyButton.MouseButton1Click:Connect(function()
+    local character = game.Players.LocalPlayer.Character
+    local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+    local humanoid = character:WaitForChild("Humanoid")
+    
     flying = not flying
     if flying then
         bodyVelocity = Instance.new("BodyVelocity")
         bodyVelocity.MaxForce = Vector3.new(10000, 10000, 10000)
         bodyVelocity.Velocity = Vector3.new(0, 50, 0)
-        bodyVelocity.Parent = game.Players.LocalPlayer.Character.HumanoidRootPart
+        bodyVelocity.Parent = humanoidRootPart
         FlyButton.Text = "Stop Flying"
+
+        game:GetService("RunService").Heartbeat:Connect(function()
+            if flying then
+                bodyVelocity.Velocity = Vector3.new(0, 50, 0)
+            end
+        end)
     else
         if bodyVelocity then
             bodyVelocity:Destroy()
         end
         FlyButton.Text = "Fly"
+    end
+end)
+
+DeleteButton.MouseButton1Click:Connect(function()
+    ScreenGui:Destroy()
+end)
+
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    Frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+Frame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = Frame.Position
+        input.Changed:Connect(function()
+            if dragging then
+                update(input)
+            end
+        end)
+    end
+end)
+
+Frame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
     end
 end)
